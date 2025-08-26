@@ -1,8 +1,8 @@
-
 services:
   - type: web
     name: project-compressor
     env: node
     buildCommand: "npm install"
-    startCommand: "node Project_compressor/backend/app.js"
+    startCommand: "node backend/app.js"
     plan: free
+    preDeployCommand: "pip install --user pillow"
