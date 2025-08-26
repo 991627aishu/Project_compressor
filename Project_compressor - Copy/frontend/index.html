@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ultra Compressor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:#0078d4; --primary-dark:#005a9e; --accent:#106ebe;
+      --bg:#f3f2f1; --card-bg:rgba(255,255,255,.92);
+      --text:#201f1e; --text-secondary:#605e5c;
+      --error:#a4262c; --success:#107c10;
+      --border:#edebe9; --radius:12px;
+      --shadow:0 10px 30px rgba(0,0,0,.12);
+      --transition:all .25s ease;
+    }
+    *{box-sizing:border-box;}
+    body{
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(135deg,#e8f0fa,#fff);
+      color:var(--text); min-height:100vh; margin:0;
+      display:flex; align-items:center; justify-content:center; padding:20px;
+    }
+    .container{width:100%;max-width:560px;}
+    .header{text-align:center;margin-bottom:16px;}
+    .header h1{margin:0 0 6px;font-size:26px;}
+    .header p{margin:0;color:var(--text-secondary);font-size:14px;}
+    form{
+      background:var(--card-bg); backdrop-filter:blur(10px);
+      border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:22px;
+      animation:fade .45s ease;
+    }
+    @keyframes fade{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+    label{font-weight:600;font-size:.95rem;margin:10px 0 6px;display:block;}
+    .drop-zone{
+      border:2px dashed var(--primary); border-radius:var(--radius);
+      padding:28px;text-align:center;background:#fafafa; cursor:pointer;
+      transition:var(--transition); color:var(--text-secondary);
+    }
+    .drop-zone.dragover{background:#e5f1fb;border-color:var(--primary-dark);color:var(--primary-dark);}
+    .drop-zone input{display:none;}
+    .drop-zone .hint{font-size:.9rem;margin-top:6px;}
+    .file-name{margin-top:8px;font-size:.95rem;color:var(--text);font-weight:600;}
+    input[type="number"]{
+      width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;
+      background:#faf9f8;font-size:.95rem;transition:var(--transition);
+    }
+    input[type="number"]:focus{
+      outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(0,120,212,.18);
+    }
+    button[type="submit"]{
+      width:100%;margin-top:12px;padding:13px 16px;border:0;border-radius:10px;
+      background:var(--primary);color:#fff;font-weight:700;font-size:1rem;
+      cursor:pointer; transition:var(--transition);
+    }
+    button[type="submit"]:hover{background:var(--primary-dark);}
+    button[type="submit"]:active{transform:scale(.98);background:var(--accent);}
+    #result{margin-top:16px;}
+    .message{
+      padding:12px 14px;border-radius:10px;font-weight:600;font-size:.95rem;
+      border:1px solid transparent;
+    }
+    .message.success{background:#e8f5e9;color:var(--success);border-color:#c8e6c9;}
+    .message.error{background:#fde7e9;color:var(--error);border-color:#f5c6cb;}
+    #result a{
+      display:inline-block;margin-top:10px;padding:10px 14px;border-radius:10px;
+      background:var(--success);color:#fff;text-decoration:none;font-weight:600;
+      box-shadow:0 2px 6px rgba(0,0,0,.15); transition:var(--transition);
+    }
+    #result a:hover{background:#0b6a0b;}
+    .progress-bar-inner{
+      height:100%;
+      width:0%;
+      background:var(--primary);
+      border-radius:8px;
+      transition:width .2s;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-size:.85rem;
+      font-weight:600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Ultra Compressor</h1>
+      <p>Compress JPG, PNG, or PDF easily</p>
+    </div>
+    <form id="compressForm" enctype="multipart/form-data" novalidate>
+      <label>Upload File</label>
+      <div class="drop-zone" id="dropZone">
+        <p><strong>Drag & Drop</strong> your file here — or click to browse</p>
+        <div class="hint">Allowed: JPG, PNG, PDF (any size)</div>
+        <input type="file" name="file" id="fileInput" accept=".jpg,.jpeg,.png,.pdf" />
+        <div class="file-name" id="fileName" hidden></div>
+      </div>
+      <label for="targetSizeKB">Target size (KB, optional)</label>
+      <input type="number" id="targetSizeKB" name="targetSizeKB" placeholder="Enter target size in KB" min="1" inputmode="numeric" />
+      <button type="submit">Compress</button>
+    </form>
+    <div id="result">
+      <div class="progress-bar"><div class="progress-bar-inner" id="progressInner">0%</div></div>
+    </div>
+  </div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileNameEl = document.getElementById('fileName');
+const compressBtn = document.querySelector('button[type="submit"]');
+const result = document.getElementById('result');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', e => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) {
+    fileInput.files = e.dataTransfer.files;
+    updateChosenFile(e.dataTransfer.files);
+  }
+});
+
+fileInput.addEventListener('change', () => updateChosenFile(fileInput.files));
+
+function updateChosenFile(files) {
+  const f = files[0];
+  if (!f) { fileNameEl.hidden = true; return; }
+  fileNameEl.textContent = `${f.name} — ${(f.size/1024).toFixed(1)} KB`;
+  fileNameEl.hidden = false;
+}
+
+function showProgress(percent, progressInner) {
+  progressInner.style.width = percent + '%';
+  progressInner.textContent = Math.floor(percent) + '%';
+}
+
+function showDownload(url, name) {
+  result.innerHTML = `<div class="message success">✔️ Compression successful!</div>
+                      <a class="download-btn" href="${url}" download="compressed_${name}">Download File</a>`;
+}
+
+compressBtn.addEventListener('click', e => {
+  e.preventDefault();
+  if (!fileInput.files[0]) return alert("Select a file");
+
+  // Reset progress bar
+  result.innerHTML = '<div class="progress-bar"><div class="progress-bar-inner" id="progressInner">0%</div></div>';
+  const progressInner = document.getElementById('progressInner');
+
+  const file = fileInput.files[0];
+  const targetKB = document.getElementById('targetSizeKB').value || 0;
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('targetSizeKB', targetKB);
+
+  let progress = 0;
+  const maxFake = 95 + Math.random() * 4; // 95–99%
+  let serverCompleted = false;
+
+  // Smarter fake progress
+  function advanceFakeProgress() {
+    if (serverCompleted) return;
+
+    const remaining = maxFake - progress;
+    let increment = remaining > 10 ? Math.random()*2+1 : Math.random()*0.5+0.1;
+    progress += increment;
+    if (progress > maxFake) progress = maxFake;
+
+    showProgress(progress, progressInner);
+
+    if (progress < maxFake) setTimeout(advanceFakeProgress, 150);
+  }
+
+  advanceFakeProgress();
+
+  // Actual compression request
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/compress');
+  xhr.responseType = 'blob';
+
+  xhr.onload = () => {
+    serverCompleted = true;
+    showProgress(100, progressInner);
+    if (xhr.status === 200) {
+      const url = URL.createObjectURL(xhr.response);
+      showDownload(url, file.name);
+    } else {
+      alert('Compression failed!');
+    }
+  };
+
+  xhr.onerror = () => {
+    serverCompleted = true;
+    alert('Network error during compression!');
+  };
+
+  xhr.send(formData);
+});
+</script>
+
+</body>
+</html>
