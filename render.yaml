@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: project-compressor
+    env: node
+    buildCommand: "npm install"   # or "yarn install"
+    startCommand: "node backend/app.js"
+    plan: free
