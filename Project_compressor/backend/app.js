@@ -4,7 +4,9 @@ const compressRouter = require('./routes/compress');
 const cors = require('cors');
 
 const app = express();
-const port = 3000;
+// CORRECTED: Use the PORT environment variable provided by the hosting platform,
+// and default to 3000 for local development.
+const port = process.env.PORT || 3000;
 
 // CORS (needed if frontend hosted separately)
 app.use(cors());
@@ -27,4 +29,6 @@ app.use('/compress', compressRouter);
 // Start server
 app.listen(port, () => {
   console.log(`✅ Server running on http://localhost:${port}`);
+  // For a live environment, this will log something like "✅ Server running on http://localhost:10000"
+  // The port will change based on what Render assigns.
 });
