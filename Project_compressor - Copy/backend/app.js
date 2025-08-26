@@ -4,7 +4,7 @@ const compressRouter = require('./routes/compress');
 const cors = require('cors');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;  // ✅ Fix for Render
 
 // CORS (needed if frontend hosted separately)
 app.use(cors());
