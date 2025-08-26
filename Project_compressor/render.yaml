@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: project-compressor   # 👈 your Render service name
+    env: node
+    buildCommand: "npm install"
+    startCommand: "node backend/app.js"
+    plan: free
