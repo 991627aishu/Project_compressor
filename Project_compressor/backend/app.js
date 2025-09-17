@@ -1,19 +1,66 @@
+
+
+// const express = require('express');
+// const path = require('path');
+// const compressRouter = require('./routes/compress');
+// const cors = require('cors');
+
+// const app = express();
+// // Use the PORT environment variable or default to 3000
+// const port = process.env.PORT || 3000;
+
+// // Enable CORS (useful if frontend is hosted separately)
+// app.use(cors());
+
+// // Middleware to parse form data and JSON
+// app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+
+// // Serve frontend static files
+// app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
+// // Serve main HTML page
+// app.get('/', (req, res) => {
+//   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+// });
+
+// // Compression endpoint
+// app.use('/compress', compressRouter);
+
+// // ✅ NEW: Render status route
+// app.get('/status', (req, res) => {
+//   const currentTime = new Date().toLocaleString();
+//   res.json({
+//     message: 'Server is on',
+//     time: currentTime
+//   });
+// });
+
+// // Start server
+// app.listen(port, () => {
+//   console.log(`✅ Server running on http://localhost:${port}`);
+// });
 const express = require('express');
 const path = require('path');
 const compressRouter = require('./routes/compress');
 const cors = require('cors');
 
 const app = express();
-// CORRECTED: Use the PORT environment variable provided by the hosting platform,
-// and default to 3000 for local development.
+// Use the PORT environment variable or default to 3000
 const port = process.env.PORT || 3000;
 
-// CORS (needed if frontend hosted separately)
+// Enable CORS (useful if frontend is hosted separately)
 app.use(cors());
 
 // Middleware to parse form data and JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// ✅ Log every request (method, URL, time)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
@@ -23,12 +70,19 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 
-// Use compress router for compression endpoint
+// Compression endpoint
 app.use('/compress', compressRouter);
+
+// ✅ NEW: Render status route
+app.get('/status', (req, res) => {
+  const currentTime = new Date().toLocaleString();
+  res.json({
+    message: 'Server is on',
+    time: currentTime
+  });
+});
 
 // Start server
 app.listen(port, () => {
   console.log(`✅ Server running on http://localhost:${port}`);
-  // For a live environment, this will log something like "✅ Server running on http://localhost:10000"
-  // The port will change based on what Render assigns.
 });
