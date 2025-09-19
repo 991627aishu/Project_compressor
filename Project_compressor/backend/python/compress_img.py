@@ -24,8 +24,10 @@ target_bytes = int(round(target_size_kb * 1024))
 # Output folder (uploads/compressed/)
 # -------------------------
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-OUTPUT_DIR = os.path.join(BASE_DIR, "uploads", "compressed")
+OUTPUT_DIR = os.path.join(BASE_DIR, "frontend", "uploads")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+# OUTPUT_DIR = os.path.join(BASE_DIR, "uploads", "compressed")
+# os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # -------------------------
 # Load image
